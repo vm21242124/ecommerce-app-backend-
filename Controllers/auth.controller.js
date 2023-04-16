@@ -185,3 +185,20 @@ export const getUserById = asyncHandler(async (req, res) => {
     user,
   });
 });
+
+
+
+export const getallUser=asyncHandler(async(req,res)=>{
+  if(!(req.user.role==="ADMIN")){
+    res.status(403).json("your are not allowed to this route")
+
+  }
+  const users=await userModel.find();
+  if(users.length===0){
+    res.status(404).json("no user are available in db");
+
+  }else{
+    res.status(200).json(users)
+  }
+
+})

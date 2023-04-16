@@ -45,7 +45,7 @@ userschema.methods = {
         _id: this._id,
         role: this.role,
       },
-      "vinodrmali01@gmail.com",
+      process.env.JWT_SECRET,
       {
         expiresIn: 60 * 15 * 1000,
       }
