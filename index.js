@@ -1,11 +1,12 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import { connection } from './Config/DB.js';
-import User from './Routes/UserRoute.js'
+import userRoute from "./Routes/userRoute.js"
+
 const app=express();
 //middleware
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({extended: true }))
 dotenv.config();
 connection();
 try {
@@ -16,4 +17,4 @@ try {
     
 }
 //Routes
-app.use('api/v1/auth',User);
+app.use("/api/user", userRoute);
