@@ -13,3 +13,4 @@ const collectionschma = new mongoose.Schema(
     timestamps: true,
   }
 );
+export const collectionModel=mongoose.model("Collection",collectionschma)
