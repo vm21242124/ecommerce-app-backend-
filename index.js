@@ -1,13 +1,15 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import { connection } from './Config/DB.js';
+import cookieParser from 'cookie-parser';
 import userRoute from "./Routes/userRoute.js"
+import collectionroute from './Routes/collections.route.js'
 
 const app=express();
 //middleware
 app.use(express.json())
 app.use(express.urlencoded({extended: true }))
-app.use(cookieparser())
+app.use(cookieParser())
 dotenv.config();
 connection();
 try {
@@ -19,3 +21,4 @@ try {
 }
 //Routes
 app.use("/api/user", userRoute);
+app.use("/api/collections",collectionroute)

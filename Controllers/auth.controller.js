@@ -4,35 +4,35 @@ import { userModel } from "../Models/UserSchema.js";
 
 export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
-  if (!(name || email || password)) {
+  if (name && email && password) {
+    //check if user exists
+    try {
+      const UserExist = await userModel.findOne({ email });
+      if (!UserExist) {
+        const user = await userModel.create({
+          name,
+          email,
+          password,
+        });
+        const token = user.getJwtToken();
+        user.password = undefined;
+        // res.cookie(token, token, cookieOptions);
+        res.status(200).cookie("token", token).json({
+          success: true,
+          message: "user created successfully",
+          user,
+        });
+      } else {
+        res.status(403).json("user already exits");
+      }
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  }else{
     res.status(401).json("fill all the details");
     return;
   }
-  //check if user exists
-  try {
-    const UserExist = await userModel.findOne({ email });
-    if (!UserExist) {
-      const user = await userModel.create({
-        name,
-        email,
-        password,
-      });
-      const token = user.getJwtToken();
-      console.log(token);
 
-      user.password = undefined;
-      // res.cookie(token, token, cookieOptions);
-      res.status(200).cookie("token", token).json({
-        success: true,
-        message: "user created successfully",
-        user,
-      });
-    } else {
-      res.status(403).json("user already exits");
-    }
-  } catch (error) {
-    res.status(500).json(error);
-  }
 });
 export const signin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -70,7 +70,6 @@ export const signout = asyncHandler(async (req, res) => {
     message: "logout successfully",
   });
 });
-
 
 export const forgotPass = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -186,19 +185,14 @@ export const getUserById = asyncHandler(async (req, res) => {
   });
 });
 
-
-
-export const getallUser=asyncHandler(async(req,res)=>{
-  if(!(req.user.role==="ADMIN")){
-    res.status(403).json("your are not allowed to this route")
-
+export const getallUser = asyncHandler(async (req, res) => {
+  if (!(req.user.role === "ADMIN")) {
+    res.status(403).json("your are not allowed to this route");
   }
-  const users=await userModel.find();
-  if(users.length===0){
+  const users = await userModel.find();
+  if (users.length === 0) {
     res.status(404).json("no user are available in db");
-
-  }else{
-    res.status(200).json(users)
+  } else {
+    res.status(200).json(users);
   }
-
-})
+});

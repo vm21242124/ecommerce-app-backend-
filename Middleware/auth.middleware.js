@@ -1,5 +1,5 @@
-import { userModel } from "../Models/UserSchema";
-import { asyncHandler } from "../services/asyncHandler";
+import { userModel } from "../Models/UserSchema.js";
+import { asyncHandler } from "../services/asyncHandler.js";
 import jwt from 'jsonwebtoken'
 
 export const isLoggedIn = asyncHandler(async (req, res,next) => {
@@ -11,13 +11,13 @@ export const isLoggedIn = asyncHandler(async (req, res,next) => {
     token = req.cookies.token || req.headers.authorization.split("")[1];
   }
   if(!token){
-    res.status(401).json("not authrized to access the route")
+    return res.status(401).json("Login first to see all collections")
   }
   try {
     const decode=jwt.verify(token,process.env.JWT_SECRET)
-    req.user=await userModel.findById(decode._id,"name email role")
+    req.user=await userModel.findById(decode._id);
     next()
   } catch (error) {
-    req.status(401).json("not auth to aceess")
+    req.status(400).json(error)
   }
 });

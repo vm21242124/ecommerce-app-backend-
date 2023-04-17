@@ -2,7 +2,6 @@ import { collectionModel } from "../Models/Collection.schema.js";
 import { productModel } from "../Models/Product.schema.js";
 import { asyncHandler } from "../services/asyncHandler.js";
 
-
 export const createCollection = asyncHandler(async (req, res) => {
   const { name } = req.body;
   if (!name) {
@@ -11,7 +10,7 @@ export const createCollection = asyncHandler(async (req, res) => {
   const user = req.user;
   if (user.role === "ADMIN") {
     const collection = await collectionModel.create({ name });
-    return res
+    res
       .status(200)
       .json({ success: true, message: "collecttion created", collection });
   } else {
@@ -21,11 +20,7 @@ export const createCollection = asyncHandler(async (req, res) => {
 export const getCOllections = asyncHandler(async (req, res) => {
   const collections = await collectionModel.find({});
   if (collections.length) {
-    res.status(200).json({
-      success: true,
-      message: "an array of the all collections",
-      collections,
-    });
+    res.status(200).json(collections);
   } else {
     res.status(401).json("no collection are in db");
   }

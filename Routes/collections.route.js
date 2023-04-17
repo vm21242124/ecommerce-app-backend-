@@ -6,13 +6,20 @@ import {
   getCOllections,
   getProductByCollectionId,
   updateCollection,
-} from "../Controllers/Collection.controller";
-import { isLoggedIn } from "../Middleware/auth.middleware";
+} from "../Controllers/Collection.controller.js";
+import { isLoggedIn } from "../Middleware/auth.middleware.js";
 const router = express.Router();
-router.post("/create", isLoggedIn, createCollection);
+//get request 
 router.get("/all", isLoggedIn, getCOllections);
-router.post("/:id", isLoggedIn, updateCollection);
-router.delete("/:id", isLoggedIn, deleteCollection);
 router.get("/:id", isLoggedIn, getCOllectionById);
 router.get("/products/:id", isLoggedIn, getProductByCollectionId);
+
+//post request 
+
+router.post("/create", isLoggedIn, createCollection);
+router.post("/update/:id", isLoggedIn, updateCollection);
+
+//delete requests
+router.delete("/delete/:id", isLoggedIn, deleteCollection);
+
 export default router;
