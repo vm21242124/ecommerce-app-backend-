@@ -4,6 +4,7 @@ import { connection } from './Config/DB.js';
 import cookieParser from 'cookie-parser';
 import userRoute from "./Routes/userRoute.js"
 import collectionroute from './Routes/collections.route.js'
+import ProductRoute from './Routes/product.route.js'
 
 const app=express();
 //middleware
@@ -22,3 +23,4 @@ try {
 //Routes
 app.use("/api/user", userRoute);
 app.use("/api/collections",collectionroute)
+app.use("/api/product",ProductRoute)
