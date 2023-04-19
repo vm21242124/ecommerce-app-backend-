@@ -2,6 +2,7 @@ import { collectionModel } from "../Models/Collection.schema.js";
 import { productModel } from "../Models/Product.schema.js";
 import { asyncHandler } from "../services/asyncHandler.js";
 
+
 export const createCollection = asyncHandler(async (req, res) => {
   const { name } = req.body;
   if (!name) {
