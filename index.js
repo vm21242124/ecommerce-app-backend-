@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import userRoute from "./Routes/userRoute.js"
 import collectionroute from './Routes/collections.route.js'
 import ProductRoute from './Routes/product.route.js'
+import { config } from './Config/config.js';
 
 const app=express();
 //middleware
@@ -15,7 +16,7 @@ dotenv.config();
 connection();
 try {
     
-    app.listen(process.env.PORT,()=>console.log(`server on ${process.env.PORT}`))
+    app.listen(config.port,()=>console.log(`server on ${config.port}`))
 } catch (error) {
     console.log(`listning error ${error}`)
     

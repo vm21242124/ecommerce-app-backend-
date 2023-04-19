@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import productModel from "../Models/Product.schema.js";
 import fs from "fs";
 import { s3Fileupload, s3deleteFile } from "../services/Filehandling.js";
+import { config } from "../Config/config.js";
 export const createProduct = asyncHandler(async (req, res) => {
   if (!req.user.role === "ADMIN") {
     return res.status(401).json("only admin can access this route");
@@ -26,7 +27,7 @@ export const createProduct = asyncHandler(async (req, res) => {
       Object.values(files).map(async (img, index) => {
         const imgData = fs.readFileSync(img, filepath);
         const upload = await s3Fileupload({
-          bucketname: process.env.S3_BUCKET_NAME,
+          bucketname: config.s3_bucketname,
           key: `product/${productId}/img_${now.getTime()}_${index}`,
           body: imgData,
           contentType: img.mimetype,
@@ -47,7 +48,7 @@ export const createProduct = asyncHandler(async (req, res) => {
       const arrLength = Object.values(files).length;
       for (let idx = 0; idx < arrLength; idx++) {
         s3deleteFile({
-          bucketname: process.env.S3_BUCKET_NAME,
+          bucketname: config.s3_bucketname,
           key: `product/img_${idx + 1}`,
         });
       }
@@ -101,7 +102,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
           let finalkey = pathName.substring(pathName.indexOf("product"));
           console.log(finalkey);
           await s3deleteFile({
-            bucketname: process.env.S3_BUCKET_NAME,
+            bucketname: config.s3_bucketname,
             key: finalkey,
           });
         })
@@ -114,7 +115,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
         imgFiles.map(async (img, i) => {
           const imgData = fs.readFileSync(img.filepath);
           const upload = await s3Fileupload({
-            bucketname: process.env.S3_BUCKET_NAME,
+            bucketname: config.s3_bucketname,
             key: `produce/${id}/img_${now.getTime()}_${i}`,
             body: imgData,
             contentType: img.mimetype,
@@ -128,7 +129,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
     const product = await productModel
       .findById(id)
       .populate("collectionId", "name");
-    let result = removedImgarr.length ? [] : product.phote;
+    let result = removedImgarr.length ? [] : product.photos;
     if (removedImgarr.length) {
       let previousImg = product.photos;
       result = previousImg.filter((img) => {
@@ -226,7 +227,7 @@ export const deleteProduct = asyncHandler(async (req, res) => {
     return res.status(401).json("product not deleted");
   }
   res.status(200).json({
-    success:true,
-    product
-  })
+    success: true,
+    product,
+  });
 });

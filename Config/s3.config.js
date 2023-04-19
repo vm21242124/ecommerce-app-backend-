@@ -1,6 +1,7 @@
 import aws from 'aws-sdk'
+import { config } from './config.js'
 export const s3=new aws.S3({
-    accessKeyId:process.env.S3_ACCESSKEY,
-    secretAccessKey:S3_SECRET_ACCESS_KEY,
-    region:process.env.REGION
+    accessKeyId:config.S3_access_key,
+    secretAccessKey:config.s3_secret_key,
+    region:config.s3_region
 })
