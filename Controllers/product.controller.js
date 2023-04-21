@@ -1,10 +1,10 @@
 import formidable from "formidable";
-import asyncHandler from "../services/asyncHandler.js";
+import { asyncHandler } from "../services/asyncHandler.js";
 import mongoose from "mongoose";
-import productModel from "../Models/Product.schema.js";
+import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
-import { s3Fileupload, s3deleteFile } from "../services/Filehandling.js";
-import { config } from "../Config/config.js";
+import { s3FileUpload, s3deleteFile } from "../services/Filehandling.js";
+
 export const createProduct = asyncHandler(async (req, res) => {
   if (!req.user.role === "ADMIN") {
     return res.status(401).json("only admin can access this route");
@@ -20,14 +20,14 @@ export const createProduct = asyncHandler(async (req, res) => {
     //generating unique id for new product
     let productId = new mongoose.Types.ObjectId().toHexString();
     if (!(fields.name || fields.price || fields.collectionId || fields.stock)) {
-      res.status(403).json("all fields are required");
+      return res.status(403).json("all fields are required");
     }
     const now = new Date();
-    let imgUrlArrRes = promise.all(
+    let imgUrlArrRes = Promise.all(
       Object.values(files).map(async (img, index) => {
-        const imgData = fs.readFileSync(img, filepath);
-        const upload = await s3Fileupload({
-          bucketname: config.s3_bucketname,
+        const imgData = fs.readFileSync(img.filepath);
+        const upload = await s3FileUpload({
+          bucketname: process.env.S3_BUCKET_NAME,
           key: `product/${productId}/img_${now.getTime()}_${index}`,
           body: imgData,
           contentType: img.mimetype,
@@ -48,7 +48,7 @@ export const createProduct = asyncHandler(async (req, res) => {
       const arrLength = Object.values(files).length;
       for (let idx = 0; idx < arrLength; idx++) {
         s3deleteFile({
-          bucketname: config.s3_bucketname,
+          bucketname: process.env.S3_BUCKET_NAME,
           key: `product/img_${idx + 1}`,
         });
       }
@@ -102,7 +102,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
           let finalkey = pathName.substring(pathName.indexOf("product"));
           console.log(finalkey);
           await s3deleteFile({
-            bucketname: config.s3_bucketname,
+            bucketname: process.env.S3_BUCKET_NAME,
             key: finalkey,
           });
         })
@@ -114,8 +114,8 @@ export const updateProductimg = asyncHandler(async (req, res) => {
       imgUrlArr = await Promise.all(
         imgFiles.map(async (img, i) => {
           const imgData = fs.readFileSync(img.filepath);
-          const upload = await s3Fileupload({
-            bucketname: config.s3_bucketname,
+          const upload = await s3FileUpload({
+            bucketname: process.env.S3_BUCKET_NAME,
             key: `produce/${id}/img_${now.getTime()}_${i}`,
             body: imgData,
             contentType: img.mimetype,

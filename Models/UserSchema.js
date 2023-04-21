@@ -3,7 +3,7 @@ import { authRoles } from "../Utils/authRoles.js";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { config } from "../Config/config.js";
+
 const userschema = new mongoose.Schema(
   {
     name: {
@@ -46,7 +46,7 @@ userschema.methods = {
         _id: this._id,
         role: this.role,
       },
-      config.jwt_secret_key,
+      process.env.JWT_SECRET,
       {
         expiresIn: 60 * 15 * 1000,
       }

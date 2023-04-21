@@ -1,4 +1,4 @@
-import { s3 } from "../Config/s3.config"
+import { s3 } from "../Config/s3.config.js"
 
 export const s3FileUpload=async({bucketname,key,body,contentType})=>{
     return await s3.upload({
