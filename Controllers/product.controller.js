@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
 import { s3FileUpload, s3deleteFile } from "../services/Filehandling.js";
+import { uploadImg } from "../Config/s3.config.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
   if (!req.user.role === "ADMIN") {
@@ -26,6 +27,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     let imgUrlArrRes = Promise.all(
       Object.values(files).map(async (img, index) => {
         const imgData = fs.readFileSync(img.filepath);
+        console.log("i am here");
         const upload = await s3FileUpload({
           bucketname: process.env.S3_BUCKET_NAME,
           key: `product/${productId}/img_${now.getTime()}_${index}`,
@@ -38,6 +40,7 @@ export const createProduct = asyncHandler(async (req, res) => {
         };
       })
     );
+
     let imgUrlArr = await imgUrlArrRes;
     const product = await productModel.create({
       ...fields,
@@ -230,4 +233,16 @@ export const deleteProduct = asyncHandler(async (req, res) => {
     success: true,
     product,
   });
+});
+
+export const getProductById = asyncHandler(async (req, res) => {
+  const {productId}=req.params;
+  const product =await productModel.findById(productId);
+  if(!product){
+    return res.status(404).json("product not found")
+  }
+  res.status(200).json({
+    success:true,
+    product
+  })
 });

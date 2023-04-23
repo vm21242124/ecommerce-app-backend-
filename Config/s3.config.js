@@ -1,10 +1,39 @@
-import aws from 'aws-sdk'
-const AWS=aws
-const s3config={
-    apiVersion: "2010-12-01",
-    accessKeyId:process.env.S3_ACCESSKEY,
-    secretAccessKey:process.env.S3_SECRET_ACCESS_KEY,
-    region:process.env.REGION
-}
-// AWS.config.update(s3config)
-export const s3= new AWS.S3(s3config)
+import aws from "aws-sdk";
+let s3 = new aws.S3({
+  region: "Asia Pacific (Mumbai) ap-south-1",
+  accessKeyId: "AKIAVVTUYTF2HAPFDL52",
+  secretAccessKey: "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",
+});
+
+export const uploadImg = async ({ bucket, key, body, contentType }) => {
+  return await s3
+    .putObject(
+      {
+        Bucket: bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+      },
+      (err, sucess) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(sucess);
+      }
+    )
+    .promise();
+};
+export const deleteImg = async ({ bucket, key }) => {
+  return await s3.deleteObject(
+    {
+      Bucket: bucket,
+      Key: key,
+    },
+    (err, sucess) => {
+      if (err) {
+        console.log(err);
+      }
+      console.log(sucess);
+    }
+  ).promise();
+};
