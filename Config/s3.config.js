@@ -1,8 +1,8 @@
 import aws from "aws-sdk";
 let s3 = new aws.S3({
-  region: "Asia Pacific (Mumbai) ap-south-1",
-  accessKeyId: "AKIAVVTUYTF2HAPFDL52",
-  secretAccessKey: "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",
+  region: process.env.S3_REGION,
+  accessKeyId: process.env.S3_ACCESSKEY,
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
 });
 
 export const uploadImg = async ({ bucket, key, body, contentType }) => {
