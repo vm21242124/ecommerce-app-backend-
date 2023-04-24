@@ -1,4 +1,6 @@
 const { default: mongoose } = require("mongoose");
+import {paymentStatus} from "../Utils/paymentStatus.js"
+import {orderStatus} from '../Utils/orderStatus.js'
 
 const order = new mongoose.Schema({
   products: {
