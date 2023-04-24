@@ -1,6 +1,6 @@
 import express from 'express'
-import {isLoggedIn} from '../Middleware/auth.middleware'
-import { createCoupon, deleteCoupon, getAllActiveCoupons, updateCopoun } from '../Controllers/coupons.controller';
+import {isLoggedIn} from '../Middleware/auth.middleware.js'
+import { createCoupon, deleteCoupon, getAllActiveCoupons, updateCopoun } from '../Controllers/coupons.controller.js';
 
 const router=express.Router();
 

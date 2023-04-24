@@ -1,5 +1,5 @@
-import { couponModel } from "../Models/Coupon.schema";
-import { asyncHandler } from "../services/asyncHandler";
+import { couponModel } from "../Models/Coupon.schema.js";
+import { asyncHandler } from "../services/asyncHandler.js";
 
 export const createCoupon=asyncHandler(async(req,res)=>{
     const {name,discount}=req.body;

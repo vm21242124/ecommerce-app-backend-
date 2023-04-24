@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
 import { s3FileUpload, s3deleteFile } from "../services/Filehandling.js";
-import { uploadImg } from "../Config/s3.config.js";
+
 
 export const createProduct = asyncHandler(async (req, res) => {
   if (!req.user.role === "ADMIN") {
