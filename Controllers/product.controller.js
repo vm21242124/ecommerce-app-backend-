@@ -3,8 +3,8 @@ import { asyncHandler } from "../services/asyncHandler.js";
 import mongoose from "mongoose";
 import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
-import { s3FileUpload, s3deleteFile } from "../services/Filehandling.js";
-import { deleteImg, getUrlObject, uploadImg } from "../Config/s3.config.js";
+
+import { deleteImg, uploadImg } from "../Config/s3.config.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
   if(!req.user.role === "ADMIN"){
@@ -103,7 +103,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     return res.status(400).json("product not found")
   }
   product[property]=value
-  const updatedproduct = await productModel.save();
+  const updatedproduct = await product.save();
   if (!updatedproduct) {
     return res.status(404).json("error to save the product");
   }
@@ -237,7 +237,6 @@ export const getSearchedProducts = asyncHandler(async (req, res) => {
   const products = await productModel.find({
     name: { $regex: regex },
   });
-  console.log(q);
   if (!products.length) {
     return res.status(404).json("no product found in db");
   }

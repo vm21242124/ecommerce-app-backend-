@@ -7,10 +7,10 @@ router.get('/id/:productId',getProductById)
 router.get("/all",getAllProducts);
 router.get('/search',getSearchedProducts);
 router.get('/list',getLimitedProduct);
-router.get("/:category",getProductByCategory);
+router.get("/:categoryId",getProductByCategory);
 router.post("/create",isLoggedIn,createProduct);
 router.put("/update/:id",isLoggedIn,updateProduct);
-router.put('/updatePhotos',isLoggedIn,updateProductimg);
+router.put('/updatephotos',isLoggedIn,updateProductimg);
 router.delete('/delete/:id',isLoggedIn,deleteProduct)
 
 
