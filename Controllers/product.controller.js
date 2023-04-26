@@ -4,65 +4,90 @@ import mongoose from "mongoose";
 import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
 import { s3FileUpload, s3deleteFile } from "../services/Filehandling.js";
-
+import { deleteImg, getUrlObject, uploadImg } from "../Config/s3.config.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
-  if (!req.user.role === "ADMIN") {
-    return res.status(401).json("only admin can access this route");
+  if(!req.user.role === "ADMIN"){
+      return res.status(403).json("you are not allowed")
   }
-  const form = formidable({
-    multiples: true,
-    keepExtensions: true,
-  });
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      return res.status(500).json(err);
-    }
-    //generating unique id for new product
-    let productId = new mongoose.Types.ObjectId().toHexString();
-    if (!(fields.name || fields.price || fields.collectionId || fields.stock)) {
-      return res.status(403).json("all fields are required");
-    }
-    const now = new Date();
-    let imgUrlArrRes = Promise.all(
-      Object.values(files).map(async (img, index) => {
-        const imgData = fs.readFileSync(img.filepath);
-        console.log("i am here");
-        const upload = await s3FileUpload({
-          bucketname: process.env.S3_BUCKET_NAME,
-          key: `product/${productId}/img_${now.getTime()}_${index}`,
-          body: imgData,
-          contentType: img.mimetype,
-        });
-        console.log(upload.Location);
-        return {
-          secure_url: upload.Location,
-        };
-      })
-    );
 
-    let imgUrlArr = await imgUrlArrRes;
-    const product = await productModel.create({
-      ...fields,
-      _id: productId,
-      photos: imgUrlArr,
-    });
-    if (!product) {
-      const arrLength = Object.values(files).length;
-      for (let idx = 0; idx < arrLength; idx++) {
-        s3deleteFile({
-          bucketname: process.env.S3_BUCKET_NAME,
-          key: `product/img_${idx + 1}`,
-        });
+  const form = formidable({
+      multiples: true,
+      keepExtensions: true
+  })
+
+  form.parse(req, async (err, fields, files) => {
+      if(err) {
+          return res.status(500).json(err)
       }
-      return res.status(400).json("error in adding product");
-    }
-    return res.status(200).json({
-      success: true,
-      product,
-    });
-  });
-});
+      // generating a unique productId
+      let productId = new mongoose.Types.ObjectId().toHexString()
+
+      // checking for input fields
+      if(!fields.name ||
+          !fields.price ||
+          !fields.description ||
+          !fields.collectionId ||
+          !fields.stock) {
+              return res.status(500).json("all feild are required")
+          }
+
+          const now = new Date()
+      // Promise.all() takes iterable of promises and return a single promise
+      let imgUrlArrRes = Promise.all(
+          // Object.values will return an array containing the values of the passed object
+          Object.values(files).map(async(img, index) => {
+              const imgData = fs.readFileSync(img.filepath)
+              const upload = await uploadImg(
+                  {
+                      bucketname: process.env.S3_BUCKET_NAME,
+                      key: `product/${productId}/img_${now.getTime()}_${index}`,
+                      body: imgData,
+                      contentType: img.mimetype
+                      
+                  }
+              )
+              let Url=upload.signedUrl;
+              return {
+                  secure_url: Url
+              }
+          })
+      )
+
+      let imgUrlArr = await imgUrlArrRes
+      // add the product to db
+      const product = await productModel.create({
+          ...fields,
+          _id: productId,
+          photos: imgUrlArr
+      })
+
+      if(!product) {
+          // if product is not created remove the images form s3 bucket
+
+          const arrLength = Object.values(files).length
+          for (let index = 0; index < arrLength; index++) {
+              deleteImg({
+                  bucketName: config.S3_BUCKET_NAME,
+                  key: `product/${productId}/img_${index + 1}`
+              })
+              
+          }
+          return res.status(404).json("product not added")
+          
+
+          // in the image, we have provided the key dynamically - (index + 1 )
+          // to achieve that we have to get the length of the files array 
+          // loop till the length of the array to generate the keys
+
+      }
+      return res.status(200).json({
+          status: true,
+          product
+      })
+  })
+})
+
 
 export const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -73,7 +98,12 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (!(property && value)) {
     return res.status(401).json("all feild are required");
   }
-  const updatedproduct = await product.save();
+  const product=await productModel.findById(id).populate("collectionId","name")
+  if(!product){
+    return res.status(400).json("product not found")
+  }
+  product[property]=value
+  const updatedproduct = await productModel.save();
   if (!updatedproduct) {
     return res.status(404).json("error to save the product");
   }
@@ -104,7 +134,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
           let pathName = new URL(url).pathname;
           let finalkey = pathName.substring(pathName.indexOf("product"));
           console.log(finalkey);
-          await s3deleteFile({
+          await deleteImg({
             bucketname: process.env.S3_BUCKET_NAME,
             key: finalkey,
           });
@@ -117,14 +147,14 @@ export const updateProductimg = asyncHandler(async (req, res) => {
       imgUrlArr = await Promise.all(
         imgFiles.map(async (img, i) => {
           const imgData = fs.readFileSync(img.filepath);
-          const upload = await s3FileUpload({
+          const upload = await uploadImg({
             bucketname: process.env.S3_BUCKET_NAME,
             key: `produce/${id}/img_${now.getTime()}_${i}`,
             body: imgData,
             contentType: img.mimetype,
           });
           return {
-            secure_url: upload.Location,
+            secure_url: upload.signedUrl,
           };
         })
       );
@@ -143,7 +173,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
       });
     }
     product.photos = [...result, ...imgUrlArr];
-    await product.save();
+    await productModel.save();
     if (!product) {
       return res.status(401).json("error to save the img");
     }
@@ -236,13 +266,13 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 export const getProductById = asyncHandler(async (req, res) => {
-  const {productId}=req.params;
-  const product =await productModel.findById(productId);
-  if(!product){
-    return res.status(404).json("product not found")
+  const { productId } = req.params;
+  const product = await productModel.findById(productId);
+  if (!product) {
+    return res.status(404).json("product not found");
   }
   res.status(200).json({
-    success:true,
-    product
-  })
+    success: true,
+    product,
+  });
 });
