@@ -5,8 +5,13 @@ import { couponModel } from "../Models/Coupon.schema.js";
 import { orderSchema } from "../Models/order.schema.js";
 import { orderStatus } from "../Utils/orderStatus.js";
 import { paymentStatus } from "../Utils/paymentStatus.js";
+import {instance} from '../Config/razorpay.config.js'
+
+
+
 export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
   const { products, phoneNumber, address, coupon } = req.body;
+
   const user = req.user._id;
   if (!(products || user || phoneNumber || address)) {
     return res.status(400).json("all fields are required");
@@ -14,6 +19,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
   let totalamount = 0;
   let descount = 0;
   let activecoupon = "";
+  console.log("call 1");
   for (const item of products) {
     try {
       const product = await productModel.findById(item.productId);
@@ -22,20 +28,22 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
       return res.status(404).json("ordered product not found in db");
     }
   }
+  console.log("call 2");
   if (coupon) {
-    const usedCoupon = await couponModel.findById(coupon._id);
+    const usedCoupon = await couponModel.findById(coupon);
     if (usedCoupon.active) {
       activecoupon = usedCoupon;
       descount = totalamount * (usedCoupon.discount / 100);
     }
   }
+  console.log("call 3");
   let finalAmount = totalamount - descount;
   const options = {
     amount: Math.round(finalAmount) * 100,
     currency: "INR",
-    receipt: `receipt _4${new Date().getTime()}`,
+    receipt: `receipt _${new Date().getTime()}`,
   };
-  const order = await instance.orderSchema.create(options);
+  const order = await instance.orders.create(options);
   if (!order) {
     return res.status(400).json("failed create order id");
   }
@@ -44,7 +52,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
     phoneNumber,
     user: req.user,
     address,
-    coupon: activecoupon.codePointAt,
+    coupon: activecoupon.code,
     amount: finalAmount,
   });
   if (!userOrder) {
