@@ -8,7 +8,8 @@ import { deleteImg, uploadImg } from "../Config/s3.config.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
   if(!req.user.role === "ADMIN"){
-      return res.status(403).json("you are not allowed")
+    return res.status(403).json("only admin have acess to this route")
+
   }
 
   const form = formidable({
@@ -18,7 +19,8 @@ export const createProduct = asyncHandler(async (req, res) => {
 
   form.parse(req, async (err, fields, files) => {
       if(err) {
-          return res.status(500).json(err)
+        return res.status(402).json("error in form parsing")
+
       }
       // generating a unique productId
       let productId = new mongoose.Types.ObjectId().toHexString()
@@ -29,7 +31,7 @@ export const createProduct = asyncHandler(async (req, res) => {
           !fields.description ||
           !fields.collectionId ||
           !fields.stock) {
-              return res.status(500).json("all feild are required")
+              throw new CustomError("Fields are required", 500)
           }
 
           const now = new Date()
@@ -37,7 +39,9 @@ export const createProduct = asyncHandler(async (req, res) => {
       let imgUrlArrRes = Promise.all(
           // Object.values will return an array containing the values of the passed object
           Object.values(files).map(async(img, index) => {
+            console.log("here calling");
               const imgData = fs.readFileSync(img.filepath)
+              console.log(img.filepath);
               const upload = await uploadImg(
                   {
                       bucketname: process.env.S3_BUCKET_NAME,
@@ -47,9 +51,8 @@ export const createProduct = asyncHandler(async (req, res) => {
                       
                   }
               )
-              let Url=upload.signedUrl;
               return {
-                  secure_url: Url
+                  secure_url: upload.signedUrl
               }
           })
       )
@@ -68,12 +71,12 @@ export const createProduct = asyncHandler(async (req, res) => {
           const arrLength = Object.values(files).length
           for (let index = 0; index < arrLength; index++) {
               deleteImg({
-                  bucketName: config.S3_BUCKET_NAME,
+                  bucketname: process.env.S3_BUCKET_NAME,
                   key: `product/${productId}/img_${index + 1}`
               })
               
           }
-          return res.status(404).json("product not added")
+          return res.status(400).json("error in adding product")
           
 
           // in the image, we have provided the key dynamically - (index + 1 )
@@ -87,8 +90,6 @@ export const createProduct = asyncHandler(async (req, res) => {
       })
   })
 })
-
-
 export const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { property, value } = req.body;
