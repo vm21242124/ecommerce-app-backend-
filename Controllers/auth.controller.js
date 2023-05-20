@@ -46,11 +46,11 @@ export const signin = asyncHandler(async (req, res) => {
       const isMatched = user.comparepass(password);
       if (isMatched) {
         const token = user.getJwtToken();
-        delete user.password;
+        const {password,...otherdetails}=user._doc;
         res.status(200).cookie("token", token).json({
           success: true,
           message: "sigin successfully",
-          user,
+          otherdetails,
         });
       }
     } else {

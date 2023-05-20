@@ -39,9 +39,8 @@ export const createProduct = asyncHandler(async (req, res) => {
       let imgUrlArrRes = Promise.all(
           // Object.values will return an array containing the values of the passed object
           Object.values(files).map(async(img, index) => {
-            console.log("here calling");
               const imgData = fs.readFileSync(img.filepath)
-              console.log(img.filepath);
+              
               const upload = await uploadImg(
                   {
                       bucketname: process.env.S3_BUCKET_NAME,
@@ -84,6 +83,7 @@ export const createProduct = asyncHandler(async (req, res) => {
           // loop till the length of the array to generate the keys
 
       }
+    
       return res.status(200).json({
           status: true,
           product
