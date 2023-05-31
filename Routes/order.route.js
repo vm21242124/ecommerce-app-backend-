@@ -5,7 +5,7 @@ const router=express.Router();
 router.get('/getkey',isLoggedIn,getKey)
 router.post('/checkout',isLoggedIn,generateRazorpayOrderId);
 router.post('/paymentverification',isLoggedIn,paymentVerification);
-router.get('/user/all',isLoggedIn,getOrders);
+router.get('/user',isLoggedIn,getOrders);
 router.delete('/cancle/:orderId',isLoggedIn,cancleOrder);
 router.get('/status',isLoggedIn,getOrderStatus)
 router.get('/all',isLoggedIn,getAllorders)

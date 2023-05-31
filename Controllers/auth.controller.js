@@ -46,11 +46,11 @@ export const signin = asyncHandler(async (req, res) => {
       const isMatched = user.comparepass(password);
       if (isMatched) {
         const token = user.getJwtToken();
-        const {password,...otherdetails}=user._doc;
+        delete user.password
         res.status(200).cookie("token", token).json({
           success: true,
           message: "sigin successfully",
-          otherdetails,
+          user,
         });
       }
     } else {
@@ -82,7 +82,7 @@ export const forgotPass = asyncHandler(async (req, res) => {
     res.status(401).json("fill all the details");
     return;
   }
-  const resetToken = user.generateForgotPasswordToken();
+  const resetToken = user.forgotPasswordToken();
   await user.save({ validateBeforeSave: true });
   console.log(req.protocol);
   console.log(req.get("X-Forwarded-Host"));
@@ -113,7 +113,7 @@ export const resetpassword = asyncHandler(async (req, res) => {
     .digest("hex");
   const user = await userModel
     .findOne({
-      forgotPasswordToken,
+      forgopasstoken,
       forgotPasswordExpiry: { $gt: Date.now() },
     })
     .select("+password");

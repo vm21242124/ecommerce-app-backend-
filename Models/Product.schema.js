@@ -30,6 +30,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    sold: {
+      type: Number,
+      default: 0,
+    },
     collectionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Collection",
@@ -40,4 +44,4 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-export const productModel=mongoose.model("Product",productSchema)
+export const productModel = mongoose.model("Product", productSchema);

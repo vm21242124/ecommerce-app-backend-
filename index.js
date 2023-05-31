@@ -7,13 +7,18 @@ import collectionroute from "./Routes/collections.route.js";
 import ProductRoute from "./Routes/product.route.js";
 import orderRoute from "./Routes/order.route.js";
 import couponRoute from "./Routes/coupon.route.js";
-import cors from "cors"
+import cors from "cors";
 const app = express();
 //middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors())
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 dotenv.config();
 connection();
 try {

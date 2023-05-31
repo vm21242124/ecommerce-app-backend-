@@ -19,7 +19,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
   let totalamount = 0;
   let descount = 0;
   let activecoupon = "";
-  console.log("call 1");
+  
   for (const item of products) {
     try {
       const product = await productModel.findById(item.productId);
@@ -28,7 +28,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
       return res.status(404).json("ordered product not found in db");
     }
   }
-  console.log("call 2");
+
   if (coupon) {
     const usedCoupon = await couponModel.findById(coupon);
     if (usedCoupon.active) {
@@ -36,14 +36,17 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
       descount = totalamount * (usedCoupon.discount / 100);
     }
   }
-  console.log("call 3");
+
   let finalAmount = totalamount - descount;
   const options = {
     amount: Math.round(finalAmount) * 100,
     currency: "INR",
     receipt: `receipt _${new Date().getTime()}`,
   };
-  const order = await instance.orders.create(options);
+ 
+    console.log("options");
+    const order = await instance.orders.create(options);
+
   if (!order) {
     return res.status(400).json("failed create order id");
   }
@@ -55,6 +58,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
     coupon: activecoupon.code,
     amount: finalAmount,
   });
+
   if (!userOrder) {
     return res.status(400).json("failed to storre the order in db");
   }
@@ -78,13 +82,16 @@ export const paymentVerification = asyncHandler(async (req, res) => {
     razorpay_signature,
     userOrderId,
   } = req.body;
+
   const body = razorpay_order_id + "|" + razorpay_payment_id;
   const expectedSignature = crypto
     .createHmac("sha256", process.env.RAZORPAY_SECRET)
     .update(body.toString())
     .digest("hex");
+   
   const isVerified = expectedSignature === razorpay_signature;
   const userOrder = await orderSchema.findById(userOrderId);
+
   if (isVerified) {
     const products = userOrder.products;
     userOrder.transactionId = razorpay_payment_id;
@@ -92,12 +99,16 @@ export const paymentVerification = asyncHandler(async (req, res) => {
     userOrder.transactionStatus = paymentStatus.SUCCESS;
     await userOrder.save();
     for (const item of products) {
-      const product = await productModel.findById(item.productId);
-      product.stock = product.stock - item.count;
-      product.sold = product.sold + item.count;
-      await productModel.save();
-    }
-    res.status(200).json({
+        // const product = await productModel.findById(item.productId);
+     
+        // product.stock = product.stock - item.count;
+        // // product.sold = product.sold + item.count;
+        
+        // const saved=await productModel.save();
+        // // console.log(product);
+      }
+     
+      res.status(200).json({
       success: true,
       message: "payment successfull",
       paymentId: razorpay_payment_id,
@@ -111,7 +122,8 @@ export const paymentVerification = asyncHandler(async (req, res) => {
   }
 });
 export const getOrders = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId=req.user._id
+  
   if (!userId) {
     return res.status(400).json("please send the userid");
   }

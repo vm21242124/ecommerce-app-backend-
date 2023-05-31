@@ -21,26 +21,24 @@ export const uploadImg = async ({ bucketname, key, body, contentType }) => {
     Body: body,
     ContentType: contentType,
   });
+  
   const res = await s3client.send(command);
   const command1 = new GetObjectCommand({
     Bucket: bucketname,
-    Key: key,
+    Key: key
   });
-  const signedUrl = await getSignedUrl(s3client, command1);
+  const signedUrl = await getSignedUrl(s3client, command1,{expiresIn:60*60*24*6});
   return {
     signedUrl,
-    res
-  }
+    res,
+  };
 };
 export const getUrlObject = async ({ bucketname, key }) => {
   const command = new GetObjectCommand({
     Bucket: bucketname,
     Key: key,
   });
-  const signedUrl = await getSignedUrl(s3client, command, {
-    expiresIn: 3600,
-  });
-  console.log(signedUrl);
+  const signedUrl = await getSignedUrl(s3client, command,{expiresIn:60});
   return signedUrl;
 };
 export const deleteImg = async ({ bucketname, key }) => {
