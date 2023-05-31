@@ -39,12 +39,11 @@ export const getUrlObject = async ({ bucketname, key }) => {
     Bucket: bucketname,
     Key: key,
   });
-<<<<<<< HEAD
-  const signedUrl = await getSignedUrl(s3client, command,{expiresIn:60});
-=======
+  
+
   const signedUrl = await getSignedUrl(s3client, command);
   console.log(signedUrl);
->>>>>>> 859921d2d7b643dd041a8a7858d5119ecba5510c
+
   return signedUrl;
 };
 export const deleteImg = async ({ bucketname, key }) => {
