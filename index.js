@@ -23,7 +23,7 @@ app.use(
 app.use(cors())
 
 dotenv.config();
-connection();
+await connection();
 try {
   app.listen(process.env.PORT, () =>
     console.log(`server on ${process.env.PORT}`)
