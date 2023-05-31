@@ -7,11 +7,12 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3client = new S3Client({
-  region: process.env.S3_REGION,
-  credentials: {
-    accessKeyId: process.env.S3_ACCESSKEY,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-  },
+  region: "ap-south-1",
+credentials:{
+
+  accessKeyId:"AKIAVVTUYTF2ED3VMV7K" ,
+  secretAccessKey: "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",
+}
 });
 
 export const uploadImg = async ({ bucketname, key, body, contentType }) => {
@@ -38,7 +39,12 @@ export const getUrlObject = async ({ bucketname, key }) => {
     Bucket: bucketname,
     Key: key,
   });
+<<<<<<< HEAD
   const signedUrl = await getSignedUrl(s3client, command,{expiresIn:60});
+=======
+  const signedUrl = await getSignedUrl(s3client, command);
+  console.log(signedUrl);
+>>>>>>> 859921d2d7b643dd041a8a7858d5119ecba5510c
   return signedUrl;
 };
 export const deleteImg = async ({ bucketname, key }) => {

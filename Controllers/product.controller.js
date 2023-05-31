@@ -39,8 +39,13 @@ export const createProduct = asyncHandler(async (req, res) => {
       let imgUrlArrRes = Promise.all(
           // Object.values will return an array containing the values of the passed object
           Object.values(files).map(async(img, index) => {
+            console.log("here calling");
               const imgData = fs.readFileSync(img.filepath)
+<<<<<<< HEAD
               
+=======
+              console.log(img.filepath);
+>>>>>>> 859921d2d7b643dd041a8a7858d5119ecba5510c
               const upload = await uploadImg(
                   {
                       bucketname: process.env.S3_BUCKET_NAME,
