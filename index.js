@@ -2,12 +2,11 @@ import express from "express";
 import dotenv from "dotenv";
 import { connection } from "./Config/DB.js";
 import cookieParser from "cookie-parser";
-import userRoute from "./Routes/userRoute.js";
 import collectionroute from "./Routes/collections.route.js";
 import ProductRoute from "./Routes/product.route.js";
 import orderRoute from "./Routes/order.route.js";
 import couponRoute from "./Routes/coupon.route.js";
-
+import userRoute from './Routes/UserRoute.js'
 import cors from "cors"
 const app = express();
 //middleware
