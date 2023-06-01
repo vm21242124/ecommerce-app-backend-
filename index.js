@@ -10,15 +10,16 @@ import userRoute from './Routes/UserRoute.js'
 import cors from "cors"
 const app = express();
 //middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+
 app.use(
   cors({
     origin: true,
     credentials: true,
   })
 );
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(cors())
 
