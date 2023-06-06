@@ -4,12 +4,11 @@ import mongoose from "mongoose";
 import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
 
-import { deleteImg, uploadImg } from "../Config/s3.config.js";
+import {  deleteImg,  getUrlObject, uploadImg } from "../Config/s3.config.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
   if(!req.user.role === "ADMIN"){
-    return res.status(403).json("only admin have acess to this route")
-
+     return res.status(401).json("not allowed")
   }
 
   const form = formidable({
@@ -19,8 +18,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 
   form.parse(req, async (err, fields, files) => {
       if(err) {
-        return res.status(402).json("error in form parsing")
-
+        return res.status(500).json("form parsing error")
       }
       // generating a unique productId
       let productId = new mongoose.Types.ObjectId().toHexString()
@@ -31,28 +29,24 @@ export const createProduct = asyncHandler(async (req, res) => {
           !fields.description ||
           !fields.collectionId ||
           !fields.stock) {
-              throw new CustomError("Fields are required", 500)
+              return res.status(403).json("all fields are req")
           }
-
-          const now = new Date()
       // Promise.all() takes iterable of promises and return a single promise
       let imgUrlArrRes = Promise.all(
           // Object.values will return an array containing the values of the passed object
           Object.values(files).map(async(img, index) => {
-            console.log("here calling");
               const imgData = fs.readFileSync(img.filepath)
-
               const upload = await uploadImg(
                   {
                       bucketname: process.env.S3_BUCKET_NAME,
-                      key: `product/${productId}/img_${now.getTime()}_${index}`,
+                      key: `product/${productId}/img_${productId}_${index}`,
                       body: imgData,
                       contentType: img.mimetype
                       
                   }
               )
               return {
-                  secure_url: upload.signedUrl
+                  secure_url: upload.signedUrl,
               }
           })
       )
@@ -71,12 +65,12 @@ export const createProduct = asyncHandler(async (req, res) => {
           const arrLength = Object.values(files).length
           for (let index = 0; index < arrLength; index++) {
               deleteImg({
-                  bucketname: process.env.S3_BUCKET_NAME,
+                  bucketname: proccess.env.S3_BUCKET_NAME,
                   key: `product/${productId}/img_${index + 1}`
               })
               
           }
-          return res.status(400).json("error in adding product")
+         return res.status(400).json("error in adding product")
           
 
           // in the image, we have provided the key dynamically - (index + 1 )
@@ -84,7 +78,6 @@ export const createProduct = asyncHandler(async (req, res) => {
           // loop till the length of the array to generate the keys
 
       }
-    
       return res.status(200).json({
           status: true,
           product
@@ -151,7 +144,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
           const imgData = fs.readFileSync(img.filepath);
           const upload = await uploadImg({
             bucketname: process.env.S3_BUCKET_NAME,
-            key: `produce/${id}/img_${now.getTime()}_${i}`,
+            key: `produce/${id}/img_${id}_${i}`,
             body: imgData,
             contentType: img.mimetype,
           });
@@ -253,7 +246,7 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   if (!id) {
     return req.status(401).json("please provide id");
   }
-  if (!req.user.role === "ADMIN") {
+  if (req.user.role !== "ADMIN") {
     return res.status(401).json("you are not allowed to this route");
   }
   const product = await productModel.findByIdAndDelete(id);
@@ -276,4 +269,40 @@ export const getProductById = asyncHandler(async (req, res) => {
     success: true,
     product,
   });
+});
+
+
+export const updateSignedUrls = asyncHandler(async (req, res) => {
+  if(req.user.role!=="ADMIN"){
+    return res.status(401).json("you are not allowed")
+  }
+  const products = await productModel.find().sort({ createdAt: 'desc' });
+
+  // Iterate over each product
+  for (const product of products) {
+    // Iterate over each photo in the product
+    for (const photo of product.photos) {
+      // Assuming photo._id contains the ID of the image
+      const imageId = product._id
+
+      // Convert the image ID to a string
+      const imageIdString = imageId.toString();
+
+      // Create an object with the bucketname and key
+      const obje = {
+        bucketname: process.env.S3_BUCKET_NAME,
+        key: `product/${imageIdString}/img_${imageIdString}_0`,
+      };
+
+      // Generate the signed URL
+      const signedUrl = await getUrlObject(obje);
+
+      // Update the signedUrl field of the photo
+      photo.signedUrl = signedUrl;
+    }
+
+    // Save the updated product
+    await product.save();
+  }
+  res.status(200).json("updated all signed urls")
 });
