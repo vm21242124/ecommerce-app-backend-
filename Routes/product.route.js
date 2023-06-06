@@ -4,7 +4,7 @@ import { isLoggedIn } from "../Middleware/auth.middleware.js";
 const router = express.Router();
 
 router.get('/id/:productId',getProductById)
-router.get("/p",isLoggedIn,updateSignedUrls)
+router.get("/updateallurls",isLoggedIn,updateSignedUrls)
 router.get("/all",getAllProducts);
 router.get('/search',getSearchedProducts);
 router.get('/list',getLimitedProduct);
