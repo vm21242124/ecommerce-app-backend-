@@ -4,15 +4,18 @@ import {
   S3Client,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+import {
+  getSignedUrl,
+} from "@aws-sdk/s3-request-presigner";
+
 
 const s3client = new S3Client({
   region: "ap-south-1",
-credentials:{
-
-  accessKeyId:"AKIAVVTUYTF2ED3VMV7K" ,
-  secretAccessKey: "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",
-}
+  credentials: {
+    accessKeyId: "AKIAVVTUYTF2ED3VMV7K",
+    secretAccessKey: "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",
+  },
 });
 
 export const uploadImg = async ({ bucketname, key, body, contentType }) => {
@@ -22,29 +25,30 @@ export const uploadImg = async ({ bucketname, key, body, contentType }) => {
     Body: body,
     ContentType: contentType,
   });
-  
+
   const res = await s3client.send(command);
   const command1 = new GetObjectCommand({
     Bucket: bucketname,
-    Key: key
+    Key: key,
   });
-  const signedUrl = await getSignedUrl(s3client, command1,{expiresIn:60*60*24*6});
+  const signedUrl = await getSignedUrl(s3client, command1, {
+    expiresIn: 60 * 60 * 24 * 6,
+  });
   return {
     signedUrl,
     res,
   };
 };
 export const getUrlObject = async ({ bucketname, key }) => {
-  const command = new GetObjectCommand({
+  const command1 = new GetObjectCommand({
     Bucket: bucketname,
     Key: key,
   });
-  
-
-  const signedUrl = await getSignedUrl(s3client, command);
-  console.log(signedUrl);
-
+  const signedUrl = await getSignedUrl(s3client, command1, {
+    expiresIn: 60 * 60 * 24 * 6,
+  });
   return signedUrl;
+  
 };
 export const deleteImg = async ({ bucketname, key }) => {
   const command = new DeleteObjectCommand({
@@ -54,3 +58,4 @@ export const deleteImg = async ({ bucketname, key }) => {
   const res = await s3client.send(command);
   return res;
 };
+
