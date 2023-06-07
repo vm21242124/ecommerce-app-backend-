@@ -1,6 +1,7 @@
 import { asyncHandler } from "../services/asyncHandler.js";
 import crypto from "crypto";
 import { userModel } from "../Models/UserSchema.js";
+import { mailHelper } from "../services/Mailhelper.js";
 
 export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -73,25 +74,30 @@ export const signout = asyncHandler(async (req, res) => {
 
 export const forgotPass = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  console.log("call1");
   if (!email) {
     res.status(401).json("fill all the details");
     return;
   }
+  console.log("call2");
   const user = await userModel.findOne({ email });
   if (!user) {
     res.status(401).json("fill all the details");
     return;
   }
-  const resetToken = user.forgotPasswordToken();
+  console.log(user);
+  const resetToken = user.generateForgotPasswordToken();
+  console.log("call4");
   await user.save({ validateBeforeSave: true });
+  console.log("call2");
   console.log(req.protocol);
-  console.log(req.get("X-Forwarded-Host"));
-  const reseturl = `${req.headers.origin}/user/reset-password/${resetToken}`;
+  const reseturl = `http://localhost:5000/api/user/reset-password/${resetToken}`;
+
   console.log(resetToken);
   const text = `click on the link to reset the password -\n\n ${reseturl}`;
   try {
     await mailHelper({
-      email: user.email,
+      recepeint: "nannie.gaylord3@ethereal.email",
       subject: "click on the link to reset the password",
       text,
     });
