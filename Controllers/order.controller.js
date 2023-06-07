@@ -127,6 +127,7 @@ export const getOrders = asyncHandler(async (req, res) => {
   if (!userId) {
     return res.status(400).json("please send the userid");
   }
+
   const orders = await orderSchema
     .find({ user: userId })
     .sort({ createdAt: "desc" });
@@ -174,17 +175,22 @@ export const getOrderStatus = asyncHandler(async (req, res) => {
 });
 
 export const getAllorders = asyncHandler(async (req, res) => {
-  const orders = await orderSchema
-    .find()
-    .sort({ createdAt: "desc" })
-    .populate("user", "name");
-  if (!orders) {
-    return res.status(400).json("no orders found");
+  
+  try {
+    const orders = await orderSchema
+      .find()
+      .sort({ createdAt: "desc" })
+    
+      if (!orders) {
+        return res.status(400).json("no orders found");
+      }
+      res.status(200).json({
+        success: true,
+        orders,
+      });
+  } catch (error) {
+    console.log(error.message);
   }
-  res.status(200).json({
-    success: true,
-    orders,
-  });
 });
 export const getOrder = asyncHandler(async (req, res) => {
   if (!(req.user.role === "ADMIN")) {
