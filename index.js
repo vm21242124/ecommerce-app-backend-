@@ -14,8 +14,8 @@ const app = express();
 app.use(
   cors({
     // origin:"http://localhost:3000",
-    // origin:"https://shopee-frontend.netlify.app",
-    origin:true,
+    origin:"https://shopee-frontend.netlify.app",
+    // origin:true,
     credentials:true
   })
 );

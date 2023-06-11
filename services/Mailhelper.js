@@ -4,7 +4,7 @@ const testAccount = await nodemailer.createTestAccount();
 const transporter = nodemailer.createTransport({
     host: testAccount.smtp.host,
     port: testAccount.smtp.port,
-    secure: false,
+    secure: true,
     auth: {
       user: testAccount.user,
       pass: testAccount.pass,
