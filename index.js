@@ -13,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:"https://shopee-frontend.netlify.app",
+    origin:"https://shopee24x7.onrender.com",
     // origin:true,
     credentials:true
   })
