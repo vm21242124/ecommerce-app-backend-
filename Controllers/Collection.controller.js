@@ -21,9 +21,9 @@ export const createCollection = asyncHandler(async (req, res) => {
 export const getCOllections = asyncHandler(async (req, res) => {
   const collections = await collectionModel.find({});
   if (collections.length) {
-    res.status(200).json(collections);
+    return res.status(200).json(collections);
   } else {
-    res.status(401).json("no collection are in db");
+    return res.status(404).json("no collection are in db");
   }
 });
 
