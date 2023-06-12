@@ -9,7 +9,7 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
         throw new CustomError("Not authorized to access the route1", 401)
     }
     try {
-        const decode =  jwt.verify(token, config.JWT_SECRET)
+        const decode =  jwt.verify(token,process.env.JWT_SECRET)
         req.user = await userModel.findById(decode._id, "name email role")
         next()
     } catch (error) {
