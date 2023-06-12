@@ -1,23 +1,24 @@
 import { couponModel } from "../Models/Coupon.schema.js";
+import CustomError from "../Utils/cutomError.js";
 import { asyncHandler } from "../services/asyncHandler.js";
 
 export const createCoupon=asyncHandler(async(req,res)=>{
     const {name,discount}=req.body;
     if(!(req.user.role==="ADMIN")){
-        return res.status(403).json("you are not allowed to create coupon")
+        throw new CustomError("you are not allowed to create coupon",403)
     }
     if(!(name || discount)){
-        return res.status(401).json("enter all the details")
+        throw new CustomError("enter all the details",401)
     }
     if(discount<0 && discount>100){
-        return res.status(400).json("discount cannot be more than 100%")
+        throw new CustomError("discount cannot be more than 100%",400)
     }
     const coupon=await couponModel.create({
         code:name.toUpperCase(),
         discount,
     })
     if(!coupon){
-        return res.status(400).json("faild to create the coupon")
+        throw new CustomError("faild to create the coupon",400)
     }
     return res.status(200).json({
         sucess:true,
@@ -27,8 +28,8 @@ export const createCoupon=asyncHandler(async(req,res)=>{
 export const updateCopoun=asyncHandler(async(req,res)=>{
     const {id}=req.params;
     let {property,value}=req.body;
-    if(req.user.role==="ADMIN"){
-        return res.status(403).json("you are not allowed")
+    if(!req.user.role==="ADMIN"){
+        throw new CustomError("you are not allowed",403)
     }
     console.log(property,value)
     if(property==="status"){
@@ -42,14 +43,14 @@ export const updateCopoun=asyncHandler(async(req,res)=>{
 
     }
     if(!id){
-        return res.status(400).json("id is required")
+        throw new CustomError("id is required",400)
     }
     if(!property && !value){
-        return res.status(400).json("fill all the details")
+        throw new CustomError("fill all the details",400)
     }
     const coupon=couponModel.findById(id);
     if(!coupon){
-        return res.status(400).json("coupon not found")
+        throw new CustomError("coupon not found",400)
     }
     coupon[property]=value
     await couponModel.save();
@@ -61,7 +62,7 @@ export const updateCopoun=asyncHandler(async(req,res)=>{
 export const deleteCoupon=asyncHandler(async(req,res)=>{
     const {id}=req.params;
     if(!id){
-        return res.status(400).json("id is required")
+        throw new CustomError("id is required",400)
     }
     const responce=await couponModel.findByIdAndDelete(id)
     if(responce){
@@ -70,16 +71,13 @@ export const deleteCoupon=asyncHandler(async(req,res)=>{
             message:"coupon deleted suceessfully"
         })
     }else{
-        res.status(400).json({
-            success:false,
-            message:"Error in deleting the coupon"
-        })   
+        throw new CustomError("delete error",500)   
     }
 })
 export const getAllCoupons=asyncHandler(async(req,res)=>{
     const coupons=await couponModel.find();
     if(coupons.length===0){
-        return res.status(400).json("no coupons are available")
+        throw new CustomError("no coupons are available",400)
     }
     return res.status(200).json({
         success:true,
@@ -89,7 +87,7 @@ export const getAllCoupons=asyncHandler(async(req,res)=>{
 export const getAllActiveCoupons=asyncHandler(async(req,res)=>{
     const coupons=await couponModel.find({active:true})
     if(coupons.length===0){
-        return res.status(400).json("no active coupons are there")
+        throw new CustomError("no active coupons are there",400)
     }
     return res.status(200).json({
         success:true,
@@ -99,14 +97,14 @@ export const getAllActiveCoupons=asyncHandler(async(req,res)=>{
 export const getCouponsbyId=asyncHandler(async(req,res)=>{
     const {id}=req.params;
     if(!id){
-        return res.status(400).json("id is required")
+        throw new CustomError("id is required",400)
     }
     const coupon=await couponModel.findById(id)
     if(!coupon){
-        return res.status(400).json("no coupons is there")
+        throw new CustomError("no coupons is there",400)
     }
     return res.status(200).json({
         success:true,
-        coupons
+        coupon
     })
 })

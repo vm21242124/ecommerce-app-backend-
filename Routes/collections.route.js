@@ -10,9 +10,9 @@ import {
 import { isLoggedIn } from "../Middleware/auth.middleware.js";
 const router = express.Router();
 //get request 
-router.get("/all", isLoggedIn, getCOllections);
+router.get("/all", getCOllections);
 router.get("/:id", isLoggedIn, getCOllectionById);
-router.get("/products/:id", isLoggedIn, getProductByCollectionId);
+router.get("/products/:id",  getProductByCollectionId);
 
 //post request 
 

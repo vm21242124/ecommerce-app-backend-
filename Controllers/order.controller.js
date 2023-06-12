@@ -6,6 +6,7 @@ import { orderSchema } from "../Models/order.schema.js";
 import { orderStatus } from "../Utils/orderStatus.js";
 import { paymentStatus } from "../Utils/paymentStatus.js";
 import {instance} from '../Config/razorpay.config.js'
+import CustomError from "../Utils/cutomError.js";
 
 
 
@@ -14,7 +15,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
 
   const user = req.user._id;
   if (!(products || user || phoneNumber || address)) {
-    return res.status(400).json("all fields are required");
+    throw new CustomError("all fields are required",400);
   }
   let totalamount = 0;
   let descount = 0;
@@ -25,7 +26,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
       const product = await productModel.findById(item.productId);
       totalamount = totalamount + Number(product.price) * item.count;
     } catch (error) {
-      return res.status(404).json("ordered product not found in db");
+      throw new CustomError("ordered product not found in db",404);
     }
   }
 
@@ -48,7 +49,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
     const order = await instance.orders.create(options);
 
   if (!order) {
-    return res.status(400).json("failed create order id");
+    throw new CustomError("failed create order id",400);
   }
   const userOrder = await orderSchema.create({
     products,
@@ -60,7 +61,7 @@ export const generateRazorpayOrderId = asyncHandler(async (req, res) => {
   });
 
   if (!userOrder) {
-    return res.status(400).json("failed to storre the order in db");
+    throw new CustomError("failed to storre the order in db",400);
   }
   res.status(200).json({
     success: true,
@@ -115,17 +116,14 @@ export const paymentVerification = asyncHandler(async (req, res) => {
     });
   } else {
     userOrder.transactionStatus = paymentStatus.FAILED;
-    res.status(400).json({
-      success: false,
-      message: "payment not verified",
-    });
+    throw new CustomError("payment  not verified",400)
   }
 });
 export const getOrders = asyncHandler(async (req, res) => {
   const userId=req.user._id
   
   if (!userId) {
-    return res.status(400).json("please send the userid");
+    throw new CustomError("please send the userid",400);
   }
 
   const orders = await orderSchema
@@ -147,11 +145,11 @@ export const getOrders = asyncHandler(async (req, res) => {
 export const cancleOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
   if (!orderId) {
-    return res.status(400).json("please send the order id");
+    throw new CustomError("please send the order id",400);
   }
   const order = await orderSchema.findById(orderId);
   if (!order) {
-    return res.status(404).json("no order found");
+    throw new CustomError("no order found",404);
   }
   order.status = orderStatus.CANCELLED;
   await orderSchema.save();
@@ -164,7 +162,7 @@ export const cancleOrder = asyncHandler(async (req, res) => {
 export const getOrderStatus = asyncHandler(async (req, res) => {
   const { s } = req.query;
   if (!s) {
-    return res.status(400).json("query string not found");
+    throw new CustomError("query string not found",400);
   }
   const orderCount = await orderSchema.countDocuments({ status: s });
   res.status(200).json({
@@ -182,7 +180,7 @@ export const getAllorders = asyncHandler(async (req, res) => {
       .sort({ createdAt: "desc" })
     
       if (!orders) {
-        return res.status(400).json("no orders found");
+        throw new CustomError("no orders found",400);
       }
       res.status(200).json({
         success: true,
@@ -194,12 +192,12 @@ export const getAllorders = asyncHandler(async (req, res) => {
 });
 export const getOrder = asyncHandler(async (req, res) => {
   if (!(req.user.role === "ADMIN")) {
-    return res.status(401).json("you dont have to access this route");
+    throw new CustomError("you dont have to access this route",401);
   }
   const { id } = req.params;
   const order = await orderSchema.findById(id).populate("user", "name");
   if (!order) {
-    return res.status(404).json("not found ");
+    throw new CustomError("not found ",404);
   }
   res.status(200).json({
     success: true,
@@ -208,12 +206,15 @@ export const getOrder = asyncHandler(async (req, res) => {
 });
 export const editOrder = asyncHandler(async (req, res) => {
   if (!(req.user.role === "ADMIN")) {
-    return res.status(401).json("you dont have to access this route");
+    throw new CustomError("you dont have to access this route",401);
   }
   const { id } = req.params;
+  if(!id){
+    throw new CustomError("id is not availble",404);
+  }
   const { address, phoneNumber, status } = req.body;
   if (!order) {
-    return res.status(404).json("not found ");
+    throw new CustomError("not found ",404);
   }
   address ? (orderSchema.address = address) : "";
   phoneNumber ? (orderSchema.phoneNumber = phoneNumber) : "";

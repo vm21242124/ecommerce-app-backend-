@@ -1,29 +1,29 @@
 import { collectionModel } from "../Models/Collection.schema.js";
 import { productModel } from "../Models/Product.schema.js";
+import CustomError from "../Utils/cutomError.js";
 import { asyncHandler } from "../services/asyncHandler.js";
-
 
 export const createCollection = asyncHandler(async (req, res) => {
   const { name } = req.body;
   if (!name) {
-    return res.status(401).json("name is required to create collection");
+    throw new CustomError("name is required to create collection", 401);
   }
   const user = req.user;
-  if (user.role === "ADMIN") {
-    const collection = await collectionModel.create({ name });
-    res
-      .status(200)
-      .json({ success: true, message: "collecttion created", collection });
-  } else {
-    return res.status(401).json("only admin can create collection");
+  if (user.role !== "ADMIN") {
+    throw new CustomError("only admin can create collection", 403);
   }
+  const collection = await collectionModel.create({ name });
+  res
+    .status(200)
+    .json({ success: true, message: "collecttion created", collection });
 });
+
 export const getCOllections = asyncHandler(async (req, res) => {
   const collections = await collectionModel.find({});
   if (collections.length) {
     return res.status(200).json(collections);
   } else {
-    return res.status(404).json("no collection are in db");
+    throw new CustomError("no collection are in db", 404);
   }
 });
 
@@ -31,25 +31,25 @@ export const updateCollection = asyncHandler(async (req, res) => {
   const user = req.user;
 
   if (!user.role === "ADMIN") {
-    return res.status(401).json("only admin have access to this route");
+    throw new CustomError("only admin have access to this route", 401);
   }
   const { name } = req.body;
   const { id } = req.params;
-  if (name && id) {
-    const collection = await collectionModel.findById(id);
-    if (collection) {
-      collection.name = name;
-      await collection.save();
-      return res.status(200).json({
-        success: true,
-        message: "collection updated successfully",
-        collection,
-      });
-    } else {
-      return res.status(404).json("collection not found in db");
-    }
+  if (!(name || id)) {
+    throw new CustomError("all feilds are required", 401);
+  }
+
+  const collection = await collectionModel.findById(id);
+  if (collection) {
+    collection.name = name;
+    await collection.save();
+    return res.status(200).json({
+      success: true,
+      message: "collection updated successfully",
+      collection,
+    });
   } else {
-    return res.statu(401).json("all feilds are required");
+    throw new CustomError("collection not found in db", 404);
   }
 });
 
@@ -57,31 +57,30 @@ export const deleteCollection = asyncHandler(async (req, res) => {
   const user = req.user;
 
   if (!user.role === "ADMIN") {
-    return res.status(403).json("only admin have permission");
+    throw new CustomError("only admin have permission", 403);
   }
   const { id } = req.params;
-  if (id) {
-    await collectionModel.findByIdAndDelete(id);
-    return res.status(200).json("deleted successfully");
-  } else {
-    return res.status(401).json("provide id");
+  if (!id) {
+    throw new CustomError("provide id", 403);
   }
+
+  await collectionModel.findByIdAndDelete(id);
+  return res.status(200).json("deleted successfully");
 });
 export const getCOllectionById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  if (id) {
-    const collection = await collectionModel.findById(id);
-    if (collection) {
-      return res.status(200).json({
-        success: true,
-        message: "collection found",
-        collection,
-      });
-    } else {
-      return res.status(404).json("collection is not available");
-    }
+  if (!id) {
+    throw new CustomError("provide id", 401);
+  }
+  const collection = await collectionModel.findById(id);
+  if (collection) {
+    return res.status(200).json({
+      success: true,
+      message: "collection found",
+      collection,
+    });
   } else {
-    return res.status(401).json("provide id");
+    throw new CustomError("collection is not available", 404);
   }
 });
 
@@ -89,11 +88,10 @@ export const getProductByCollectionId = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const product = await productModel.find({ collectionId: id });
   if (!product) {
-    return res.status(404).json("products are not available in collection");
-  } else {
-    res.status(200).json({
-      success: true,
-      product,
-    });
+    throw new CustomError("products are not available in collection", 404);
   }
+  res.status(200).json({
+    success: true,
+    product,
+  });
 });

@@ -5,10 +5,11 @@ import { productModel } from "../Models/Product.schema.js";
 import fs from "fs";
 
 import {  deleteImg,  getUrlObject, uploadImg } from "../Config/s3.config.js";
+import CustomError from "../Utils/cutomError.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
   if(!req.user.role === "ADMIN"){
-     return res.status(401).json("not allowed")
+     throw new CustomError("you not allowed",401)
   }
 
   const form = formidable({
@@ -70,12 +71,8 @@ export const createProduct = asyncHandler(async (req, res) => {
               })
               
           }
-         return res.status(400).json("error in adding product")
-          
-
-          // in the image, we have provided the key dynamically - (index + 1 )
-          // to achieve that we have to get the length of the files array 
-          // loop till the length of the array to generate the keys
+         throw new CustomError("error in adding product",400)
+        
 
       }
       return res.status(200).json({
@@ -88,19 +85,19 @@ export const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { property, value } = req.body;
   if (!(req.user.role === "ADMIN")) {
-    return res.status(403).json("only admin have the access");
+    throw new CustomError("only admin have the access",403);
   }
   if (!(property && value)) {
-    return res.status(401).json("all feild are required");
+    throw new CustomError("all feild are required",401);
   }
   const product=await productModel.findById(id).populate("collectionId","name")
   if(!product){
-    return res.status(400).json("product not found")
+    throw new CustomError("product not found",400)
   }
   product[property]=value
   const updatedproduct = await product.save();
   if (!updatedproduct) {
-    return res.status(404).json("error to save the product");
+    throw new CustomError("error to save the product",404);
   }
   res.status(200).json({
     success: true,
@@ -109,7 +106,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
 });
 export const updateProductimg = asyncHandler(async (req, res) => {
   if (!(req.user.role === "ADMIN")) {
-    return res.status(403).json("only admin have the access");
+    throw new CustomError("only admin have the access",403);
   }
   const { id } = req.params;
   const form = formidable({
@@ -170,7 +167,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
     product.photos = [...result, ...imgUrlArr];
     await productModel.save();
     if (!product) {
-      return res.status(401).json("error to save the img");
+      throw new CustomError("error to save the img",401);
     }
     return res.status(200).json({
       success: true,
@@ -182,7 +179,7 @@ export const updateProductimg = asyncHandler(async (req, res) => {
 export const getAllProducts = asyncHandler(async (req, res) => {
   const product = await productModel.find().sort({ createdAt: "desc" });
   if (!product) {
-    return res.status(400).json("no product found");
+    throw new CustomError("no product found",400);
   }
   return res.status(200).json({
     success: true,
@@ -195,7 +192,7 @@ export const getLimitedProduct = asyncHandler(async (req, res) => {
   const skipcount = (page - 1) * limit;
   const products = await productModel.find().skip(skipcount).limit(limit);
   if (!products) {
-    return res.status(400).json("no product found");
+    throw new CustomError("no product found",400);
   }
   return res.status(200).json({
     success: true,
@@ -209,14 +206,14 @@ export const getProductByCategory = asyncHandler(async (req, res) => {
   const limit = Number(req.query.page) || 12;
   const skipcount = (page - 1) * limit;
   if (!categoryId) {
-    return res.status(401).json("please provide category id");
+    throw new CustomError("please provide category id",401);
   }
   const products = await productModel
     .find({ collectionId: categoryId })
     .skip(skipcount)
     .limit(limit);
   if (!products) {
-    return res.status(400).json("no product in category");
+    throw new CustomError("no product in category",400);
   }
   return res.status(200).json({
     success: true,
@@ -226,14 +223,14 @@ export const getProductByCategory = asyncHandler(async (req, res) => {
 export const getSearchedProducts = asyncHandler(async (req, res) => {
   const { q } = req.query;
   if (!q) {
-    return req.status(401).json("please provide query");
+    throw new CustomError("please provide query",401);
   }
   const regex = new RegExp(q, "i");
   const products = await productModel.find({
     name: { $regex: regex },
   });
   if (!products.length) {
-    return res.status(404).json("no product found in db");
+    throw new CustomError("no product found in db",404);
   }
   return res.status(200).json({
     success: true,
@@ -244,14 +241,14 @@ export const getSearchedProducts = asyncHandler(async (req, res) => {
 export const deleteProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!id) {
-    return req.status(401).json("please provide id");
+    throw new CustomError("please provide id",401);
   }
   if (req.user.role !== "ADMIN") {
-    return res.status(401).json("you are not allowed to this route");
+    throw new CustomError("you are not allowed to this route",401);
   }
   const product = await productModel.findByIdAndDelete(id);
   if (!product) {
-    return res.status(401).json("product not deleted");
+    throw new CustomError("product not deleted",401);
   }
   res.status(200).json({
     success: true,
@@ -263,7 +260,7 @@ export const getProductById = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const product = await productModel.findById(productId);
   if (!product) {
-    return res.status(404).json("product not found");
+    throw new CustomError("product not found",404);
   }
   res.status(200).json({
     success: true,
@@ -274,7 +271,7 @@ export const getProductById = asyncHandler(async (req, res) => {
 
 export const updateSignedUrls = asyncHandler(async (req, res) => {
   if(req.user.role!=="ADMIN"){
-    return res.status(401).json("you are not allowed")
+    throw new CustomError("you are not allowed",401)
   }
   const products = await productModel.find().sort({ createdAt: 'desc' });
 

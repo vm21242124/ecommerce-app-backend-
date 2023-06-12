@@ -8,6 +8,7 @@ import orderRoute from "./Routes/order.route.js";
 import couponRoute from "./Routes/coupon.route.js";
 import userRoute from './Routes/UserRoute.js'
 import cors from 'cors'
+
 const app = express();
 //middleware
 
@@ -30,6 +31,7 @@ try {
 } catch (error) {
   console.log(`listning error ${error}`);
 }
+
 //Routes
 app.use("/api/user", userRoute);
 app.use("/api/collections", collectionroute);

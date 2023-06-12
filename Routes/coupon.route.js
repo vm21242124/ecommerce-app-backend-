@@ -5,7 +5,7 @@ import { createCoupon, deleteCoupon, getAllActiveCoupons, updateCopoun } from '.
 const router=express.Router();
 
 router.post("/create",isLoggedIn,createCoupon)
-router.get("/all",isLoggedIn,getAllActiveCoupons);
+router.get("/all",getAllActiveCoupons);
 router.delete("/:id",isLoggedIn,deleteCoupon);
 router.get("/active",getAllActiveCoupons);
 router.put("/update/:id",isLoggedIn,updateCopoun)

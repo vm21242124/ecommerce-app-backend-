@@ -2,63 +2,58 @@ import { asyncHandler } from "../services/asyncHandler.js";
 import crypto from "crypto";
 import { userModel } from "../Models/UserSchema.js";
 import { mailHelper } from "../services/Mailhelper.js";
+import CustomError from "../Utils/cutomError.js";
 
 export const signUp = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
-  if (name && email && password) {
-    //check if user exists
-    try {
-      const UserExist = await userModel.findOne({ email });
-      if (!UserExist) {
-        const user = await userModel.create({
-          name,
-          email,
-          password,
-        });
-        const token = user.getJwtToken();
-        user.password = undefined;
-        // res.cookie(token, token, cookieOptions);
-        res.status(200).cookie("token", token).json({
-          success: true,
-          message: "user created successfully",
-          user,
-        });
-      } else {
-        res.status(403).json("user already exits");
-      }
-    } catch (error) {
-      res.status(500).json(error);
-    }
-  }else{
-    res.status(401).json("fill all the details");
-    return;
+  if (!(name || email || password)) {
+    throw new CustomError("Fill all the details", 403);
   }
 
+  const UserExist = await userModel.findOne({ email });
+  if (UserExist) {
+    throw new CustomError("User Already Exits", 403);
+  }
+  if (!UserExist) {
+    const user = await userModel.create({
+      name,
+      email,
+      password,
+    });
+    const token = user.getJwtToken();
+    user.password = undefined;
+    // res.cookie(token, token, cookieOptions);
+
+    res.status(200).cookie("token", token).json({
+      success: true,
+      message: "user created successfully",
+      user,
+    });
+  }
 });
 export const signin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!(email, password)) {
-    res.status(401).json("fill all the details");
-    return;
+    throw new CustomError("fill all the details", 401);
   }
-  try {
-    const user = await userModel.findOne({ email }).select("+password");
-    if (user) {
-      const isMatched = user.comparepass(password);
-      if (isMatched) {
-        const token = user.getJwtToken();
-        delete user.password
-        res.status(200).cookie("token", token).json({
-          success: true,
-          message: "sigin successfully",
-          user,
-        });
-      }
-    } else {
-      res.status(404).json("user not found");
-    }
-  } catch (error) {
-    res.status(500).json(error);
+
+  const user = await userModel.findOne({ email }).select("+password");
+  if (!user) {
+    throw new CustomError("User Not Found", 404);
+  }
+
+  const isMatched = await user.comparepass(password);
+
+  if (isMatched) {
+    const token = user.getJwtToken();
+    delete user.password;
+    res.status(200).cookie("token", token).json({
+      success: true,
+      message: "sigin successfully",
+      user,
+    });
+  } else {
+    throw new CustomError("Invalid Credentials", 403);
   }
 });
 export const signout = asyncHandler(async (req, res) => {
@@ -74,26 +69,21 @@ export const signout = asyncHandler(async (req, res) => {
 
 export const forgotPass = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  console.log("call1");
+  
   if (!email) {
-    res.status(401).json("fill all the details");
-    return;
+    throw new CustomError("fill all the details", 401);
   }
-  console.log("call2");
   const user = await userModel.findOne({ email });
   if (!user) {
-    res.status(401).json("fill all the details");
-    return;
+    throw new CustomError("user not found", 401);
   }
-  console.log(user);
-  const resetToken = user.generateForgotPasswordToken();
-  console.log("call4");
+
+  const resetToken = await user.generateForgotPasswordToken();
+
   await user.save({ validateBeforeSave: true });
-  console.log("call2");
-  console.log(req.protocol);
+
   const reseturl = `http://localhost:5000/api/user/reset-password/${resetToken}`;
 
-  console.log(resetToken);
   const text = `click on the link to reset the password -\n\n ${reseturl}`;
   try {
     await mailHelper({
@@ -103,10 +93,9 @@ export const forgotPass = asyncHandler(async (req, res) => {
     });
     res.status(200).json(`email sent to ${user.email}`);
   } catch (error) {
-    forgotPasswordToken = undefined;
     forgotPasswordExpiry = undefined;
     await user.save({ validateBeforeSave: false });
-    res.status(400).json("failed to send mail");
+    throw new CustomError("failed to send mail", 400);
   }
 });
 
@@ -124,10 +113,10 @@ export const resetpassword = asyncHandler(async (req, res) => {
     })
     .select("+password");
   if (!user) {
-    return res.status(400).json("invalid token or too late");
+    throw new CustomError("invalid token or too late", 400);
   }
   if (password != confirmpass) {
-    return res.status(400).json("password and confirmpass not matching");
+    throw new CustomError("password and confirmpass not matching", 403);
   }
   user.password = password;
   user.forgotPasswordToken = undefined;
@@ -142,10 +131,11 @@ export const resetpassword = asyncHandler(async (req, res) => {
   });
 });
 export const changepass = asyncHandler(async (req, res) => {
+
   const { password, confirmpass } = req.body;
   const user = req.user;
   if (password != confirmpass) {
-    return res.status(400).json("password not matching");
+   throw new CustomError("password not matching",400);
   }
   userModel.password = password;
   await userModel.save();
@@ -165,7 +155,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const { property, value } = req.body;
   const user = await userModel.findById(req.user._id);
   if (!user) {
-    return res.status(404).json("user not found");
+    throw new CustomError("user not found",404);
   }
   if (property === "name") {
     user.name = value;
@@ -183,7 +173,7 @@ export const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const user = await userModel.findById(id);
   if (!user) {
-    return res.status(404).json("user not found");
+    throw new CustomError("user not found",404);
   }
   res.status(200).json({
     success: true,
@@ -193,11 +183,11 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 export const getallUser = asyncHandler(async (req, res) => {
   if (!(req.user.role === "ADMIN")) {
-    res.status(403).json("your are not allowed to this route");
+    throw new CustomError("your are not allowed to this route",403);
   }
   const users = await userModel.find();
   if (users.length === 0) {
-    res.status(404).json("no user are available in db");
+    throw new CustomError("no user are available in db",400);
   } else {
     res.status(200).json(users);
   }
