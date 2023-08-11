@@ -191,9 +191,6 @@ export const getAllorders = asyncHandler(async (req, res) => {
   }
 });
 export const getOrder = asyncHandler(async (req, res) => {
-  if (!(req.user.role === "ADMIN")) {
-    throw new CustomError("you dont have to access this route",401);
-  }
   const { id } = req.params;
   const order = await orderSchema.findById(id).populate("user", "name");
   if (!order) {

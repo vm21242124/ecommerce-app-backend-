@@ -11,15 +11,15 @@ import { isLoggedIn } from "../Middleware/auth.middleware.js";
 const router = express.Router();
 //get request 
 router.get("/all", getCOllections);
-router.get("/:id", isLoggedIn, getCOllectionById);
+router.get("/:id",  getCOllectionById);
 router.get("/products/:id",  getProductByCollectionId);
 
 //post request 
 
-router.post("/create", isLoggedIn, createCollection);
-router.post("/update/:id", isLoggedIn, updateCollection);
+router.post("/create",  createCollection);
+router.post("/update/:id", updateCollection);
 
 //delete requests
-router.delete("/delete/:id", isLoggedIn, deleteCollection);
+router.delete("/delete/:id",  deleteCollection);
 
 export default router;

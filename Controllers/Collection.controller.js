@@ -8,10 +8,7 @@ export const createCollection = asyncHandler(async (req, res) => {
   if (!name) {
     throw new CustomError("name is required to create collection", 401);
   }
-  const user = req.user;
-  if (user.role !== "ADMIN") {
-    throw new CustomError("only admin can create collection", 403);
-  }
+
   const collection = await collectionModel.create({ name });
   res
     .status(200)
@@ -28,11 +25,7 @@ export const getCOllections = asyncHandler(async (req, res) => {
 });
 
 export const updateCollection = asyncHandler(async (req, res) => {
-  const user = req.user;
 
-  if (!user.role === "ADMIN") {
-    throw new CustomError("only admin have access to this route", 401);
-  }
   const { name } = req.body;
   const { id } = req.params;
   if (!(name || id)) {
@@ -54,11 +47,6 @@ export const updateCollection = asyncHandler(async (req, res) => {
 });
 
 export const deleteCollection = asyncHandler(async (req, res) => {
-  const user = req.user;
-
-  if (!user.role === "ADMIN") {
-    throw new CustomError("only admin have permission", 403);
-  }
   const { id } = req.params;
   if (!id) {
     throw new CustomError("provide id", 403);

@@ -4,9 +4,7 @@ import { asyncHandler } from "../services/asyncHandler.js";
 
 export const createCoupon=asyncHandler(async(req,res)=>{
     const {name,discount}=req.body;
-    if(!(req.user.role==="ADMIN")){
-        throw new CustomError("you are not allowed to create coupon",403)
-    }
+  
     if(!(name || discount)){
         throw new CustomError("enter all the details",401)
     }
@@ -28,9 +26,6 @@ export const createCoupon=asyncHandler(async(req,res)=>{
 export const updateCopoun=asyncHandler(async(req,res)=>{
     const {id}=req.params;
     let {property,value}=req.body;
-    if(!req.user.role==="ADMIN"){
-        throw new CustomError("you are not allowed",403)
-    }
     console.log(property,value)
     if(property==="status"){
         property="active"

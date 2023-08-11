@@ -2,13 +2,13 @@ import express from 'express'
 import { isLoggedIn } from '../Middleware/auth.middleware.js'
 import { cancleOrder, editOrder, generateRazorpayOrderId, getAllorders, getKey, getOrder, getOrderStatus, getOrders, paymentVerification } from '../Controllers/order.controller.js'
 const router=express.Router();
-router.get('/getkey',isLoggedIn,getKey)
-router.post('/checkout',isLoggedIn,generateRazorpayOrderId);
-router.post('/paymentverification',isLoggedIn,paymentVerification);
-router.get('/user',isLoggedIn,getOrders);
-router.delete('/cancle/:orderId',isLoggedIn,cancleOrder);
-router.get('/status',isLoggedIn,getOrderStatus)
-router.get('/all',isLoggedIn,getAllorders)
-router.get('/id/:id',isLoggedIn,getOrder)
-router.put('/edit/:id',isLoggedIn,editOrder)
+router.get('/getkey',getKey)
+router.post('/checkout',generateRazorpayOrderId);
+router.post('/paymentverification',paymentVerification);
+router.get('/user',getOrders);
+router.delete('/cancle/:orderId',cancleOrder);
+router.get('/status',getOrderStatus)
+router.get('/all',getAllorders)
+router.get('/id/:id',getOrder)
+router.put('/edit/:id',editOrder)
 export default router

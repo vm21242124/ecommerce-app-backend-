@@ -8,9 +8,7 @@ import {  deleteImg,  getUrlObject, uploadImg } from "../Config/s3.config.js";
 import CustomError from "../Utils/cutomError.js";
 
 export const createProduct = asyncHandler(async (req, res) => {
-  if(!req.user.role === "ADMIN"){
-     throw new CustomError("you not allowed",401)
-  }
+
 
   const form = formidable({
       multiples: true,
@@ -84,9 +82,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 export const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { property, value } = req.body;
-  if (!(req.user.role === "ADMIN")) {
-    throw new CustomError("only admin have the access",403);
-  }
+
   if (!(property && value)) {
     throw new CustomError("all feild are required",401);
   }
@@ -105,9 +101,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
   });
 });
 export const updateProductimg = asyncHandler(async (req, res) => {
-  if (!(req.user.role === "ADMIN")) {
-    throw new CustomError("only admin have the access",403);
-  }
+
   const { id } = req.params;
   const form = formidable({
     multiples: true,
@@ -270,9 +264,7 @@ export const getProductById = asyncHandler(async (req, res) => {
 
 
 export const updateSignedUrls = asyncHandler(async (req, res) => {
-  if(req.user.role!=="ADMIN"){
-    throw new CustomError("you are not allowed",401)
-  }
+
   const products = await productModel.find().sort({ createdAt: 'desc' });
 
   // Iterate over each product
